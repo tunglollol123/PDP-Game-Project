@@ -3,18 +3,59 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.EventSystems;
+using TMPro;
 
 
-public interface IAnimator2D
-{
 
-    void MouseHover();///Play the Animation
-    void MouseLeave();
-    void Selected(); ///Select Animation play
+public class Menuloader
+{   
+    
+    float YieldTime;
+    GameObject Comp;
+    Color Lerped_Color;
+    Color Defualt;
+
+    public Menuloader(float Time,Color ToChange,Color Defualt_RGB)
+    {
+        YieldTime = Time;
+        Lerped_Color = ToChange;
+        Defualt = Defualt_RGB;
+    }
+
+    public IEnumerator MouseHoverLoader(GameObject self)///Play the Animation
+    {   
+        Comp = self.transform.GetChild(0).gameObject;
+        Comp.GetComponent<TMP_Text>().color = Lerped_Color;
+
+        self.transform.LeanScale(new Vector2(1.2f,1.2f),YieldTime).setEaseInOutQuart();
+        yield return null;
+    }
+
+    public IEnumerator MouseLeaveLoader(GameObject self)
+    {   
+        self.transform.LeanScale(Vector2.one,YieldTime).setEaseLinear();
+
+        Comp.GetComponent<TMP_Text>().color = Defualt;
+
+        yield return null;
+    }
 }
 
 public class Menu_Handler : MonoBehaviour
-{       
+{     
+
+    public Color UI_ColorToChange;
+    public Color CurrentColor;
+    [Range(0,1)]
+    public float LerpedTime;
+    Menuloader Loader;
+
+    void Start()
+    {
+        Loader = new Menuloader(0.4f,UI_ColorToChange,CurrentColor);
+    }
+
+    
     private IEnumerator LoadSceneThread(string NextScene) ////Load next scene
     {   
         yield return new WaitForSecondsRealtime(1.5f);
@@ -23,22 +64,29 @@ public class Menu_Handler : MonoBehaviour
 
     public void LoadScene(string SceneNext)
     {
-        ///Play Animation
+        ///Play Transformation animation
         StartCoroutine(LoadSceneThread(SceneNext));
+
     }
 
     public void QuitApp()
     {
-        print("Quitting App");
+        
+    }
+    
+    public void MouseHover(GameObject Self)
+    {
+        StartCoroutine(Loader.MouseHoverLoader(Self));
+
+        StopCoroutine(Loader.MouseHoverLoader(Self));
     }
 
-    public void MouseHover()///Play the Animation
+    public void MouseExit(GameObject Self)
     {
-        print("Mouse Hovering");
-    }
+        StartCoroutine(Loader.MouseLeaveLoader(Self));
 
-    public void MouseLeave()
-    {
-        print("Mouse Exiting");
+
+        StopCoroutine(Loader.MouseLeaveLoader(Self));
     }
+   
 }
