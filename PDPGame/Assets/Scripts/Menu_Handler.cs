@@ -43,30 +43,40 @@ public class Menuloader
 
 public class Menu_Handler : MonoBehaviour
 {     
-
+    public GameObject[] Comp; ///Contains comp
     public Color UI_ColorToChange;
     public Color CurrentColor;
     [Range(0,1)]
     public float LerpedTime;
     Menuloader Loader;
+    private bool GoNextScene = false;
 
-    void Start()
+    void Start() //init
     {
         Loader = new Menuloader(0.4f,UI_ColorToChange,CurrentColor);
     }
 
     
-    private IEnumerator LoadSceneThread(string NextScene) ////Load next scene
+    public IEnumerator LoadSceneThread(string NextScene) ////Load next scene
     {   
-        yield return new WaitForSecondsRealtime(1.5f);
-        SceneManager.LoadSceneAsync(NextScene);
+        var IsDowned = false;
+
+        if (IsDowned == false)
+        {
+            Comp[3].transform.LeanMoveLocal(new Vector2(6.9141e-0f,-0.00012207f),0.9f).setEaseInOutQuart();
+            yield return new WaitForSeconds(0.9f);
+            SceneManager.LoadSceneAsync(NextScene); 
+        }
     }
 
-    public void LoadScene(string SceneNext)
+    public void LoadScene(string NextScene)
     {
-        ///Play Transformation animation
-        StartCoroutine(LoadSceneThread(SceneNext));
-
+        if (GoNextScene == false)
+        {
+            GoNextScene = true;
+            StartCoroutine(LoadSceneThread(NextScene));
+            GoNextScene = false;
+        }
     }
 
     public void QuitApp()
