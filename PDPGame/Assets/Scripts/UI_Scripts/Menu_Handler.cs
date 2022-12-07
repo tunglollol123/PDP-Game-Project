@@ -4,7 +4,9 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.EventSystems;
 using TMPro;
-
+using UnityEngine.UI;
+using System.Threading.Tasks;
+using System.Threading;
 
 
 public class Menuloader
@@ -15,6 +17,9 @@ public class Menuloader
     Color Lerped_Color;
     Color Defualt;
 
+    private AsyncOperation Loading_Procces;
+    
+
     public Menuloader(float Time,Color ToChange,Color Defualt_RGB)
     {
         YieldTime = Time;
@@ -22,10 +27,16 @@ public class Menuloader
         Defualt = Defualt_RGB;
     }
 
+    public Menuloader()
+    {
+        
+    } ///Scene Handler
+
     public IEnumerator MouseHoverLoader(GameObject self)///Play the Animation
     {   
         Comp = self.transform.GetChild(0).gameObject;
         Comp.GetComponent<TMP_Text>().color = Lerped_Color;
+        self.GetComponent<Image>().color = Defualt;
 
         self.transform.LeanScale(new Vector2(1.2f,1.2f),YieldTime).setEaseInOutQuart();
         yield return null;
@@ -36,52 +47,52 @@ public class Menuloader
         self.transform.LeanScale(Vector2.one,YieldTime).setEaseLinear();
 
         Comp.GetComponent<TMP_Text>().color = Defualt;
+        self.GetComponent<Image>().color = Lerped_Color;  
 
         yield return null;
     }
+
+
+    public IEnumerator LoadingSceneAsync(string NextScene)///LoadScene here
+    {
+        Loading_Procces = SceneManager.LoadSceneAsync(NextScene);
+
+        while(Loading_Procces.isDone == false)
+        {
+            Debug.Log(Loading_Procces.progress);
+
+            yield return null;
+        }
+    }
+
 }
 
 public class Menu_Handler : MonoBehaviour
 {     
     public GameObject[] Comp; ///Contains comp
-    public Color UI_ColorToChange;
-    public Color CurrentColor;
+    public Color Title_ColoredToChange;
+    public Color TitleCurrentColor;
+
     [Range(0,1)]
     public float LerpedTime;
     Menuloader Loader;
-    private bool GoNextScene = false;
+    
 
     void Start() //init
     {
-        Loader = new Menuloader(0.4f,UI_ColorToChange,CurrentColor);
+        Loader = new Menuloader(0.4f,Title_ColoredToChange,TitleCurrentColor);
     }
 
     
-    public IEnumerator LoadSceneThread(string NextScene) ////Load next scene
-    {   
-        var IsDowned = false;
-
-        if (IsDowned == false)
-        {
-            Comp[3].transform.LeanMoveLocal(new Vector2(6.9141e-0f,-0.00012207f),0.9f).setEaseInOutQuart();
-            yield return new WaitForSeconds(0.9f);
-            SceneManager.LoadSceneAsync(NextScene); 
-        }
-    }
-
-    public void LoadScene(string NextScene)
+    public void LoadScene(string NextScene)///loading to Next scene directly
     {
-        if (GoNextScene == false)
-        {
-            GoNextScene = true;
-            StartCoroutine(LoadSceneThread(NextScene));
-            GoNextScene = false;
-        }
+       SceneManager.LoadScene(NextScene); 
     }
+    
 
     public void QuitApp()
     {
-        
+        Debug.Log("Quit App"); 
     }
     
     public void MouseHover(GameObject Self)
@@ -94,8 +105,6 @@ public class Menu_Handler : MonoBehaviour
     public void MouseExit(GameObject Self)
     {
         StartCoroutine(Loader.MouseLeaveLoader(Self));
-
-
         StopCoroutine(Loader.MouseLeaveLoader(Self));
     }
    
